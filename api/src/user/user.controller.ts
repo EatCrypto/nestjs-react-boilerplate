@@ -12,6 +12,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
+import { AuthResponseDto } from 'src/auth/dto/auth-response.dto';
 
 @Controller('user')
 export class UserController {
@@ -26,8 +27,8 @@ export class UserController {
   }
 
   @Post('login')
-  async login(@Body() input: LoginUserDto) {
-    return this.authService.validateUser(input.username, input.password);
+  async login(@Body() input: LoginUserDto): Promise<AuthResponseDto> {
+    return await this.authService.login(input.username, input.password);
   }
 
   @Get()
