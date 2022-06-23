@@ -1,0 +1,13 @@
+{
+  "name": "calorie",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "setup": "cd api && yarn",
+    "start:api": "cd api && yarn start:dev",
+    "migration:generate": "cd api && yarn migration:generate"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
