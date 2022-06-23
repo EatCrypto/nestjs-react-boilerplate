@@ -6,7 +6,8 @@
     "setup": "cd api && yarn",
     "start:api": "cd api && yarn start:dev",
     "seed": "cd api && yarn seed:run",
-    "migration:generate": "cd api && yarn migration:generate"
+    "migration:generate": "cd api && yarn migration:generate",
+    "migration:run": "cd api && yarn migration:run"
   },
   "keywords": [],
   "author": "",
