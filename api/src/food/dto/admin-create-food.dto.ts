@@ -1,7 +1,7 @@
 import { Expose } from 'class-transformer';
 import { IsNotEmpty } from 'class-validator';
 
-export class CreateFoodDto {
+export class AdminCreateFoodDto {
   @IsNotEmpty()
   @Expose()
   name: string;
@@ -13,4 +13,8 @@ export class CreateFoodDto {
   @IsNotEmpty()
   @Expose()
   price: number;
+
+  @IsNotEmpty()
+  @Expose()
+  userId: number;
 }
