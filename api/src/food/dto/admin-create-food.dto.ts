@@ -17,4 +17,8 @@ export class AdminCreateFoodDto {
   @IsNotEmpty()
   @Expose()
   userId: number;
+
+  @IsNotEmpty()
+  @Expose()
+  takenAt: string;
 }

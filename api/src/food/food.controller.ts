@@ -24,14 +24,15 @@ export class FoodController {
   @AuthApi()
   @Post()
   async create(@AuthUser() user: User, @Body() createFoodDto: CreateFoodDto) {
-    return await this.foodService.create(user, createFoodDto);
+    return await this.foodService.create(user.id, createFoodDto);
   }
 
   @AuthApi()
   @Roles(Role.Admin)
   @Post('admin')
   async adminCreate(@Body() adminCreateFoodDto: AdminCreateFoodDto) {
-    return await this.foodService.adminCreate(adminCreateFoodDto);
+    const { userId, ...input } = adminCreateFoodDto;
+    return await this.foodService.create(userId, input);
   }
 
   @AuthApi()
