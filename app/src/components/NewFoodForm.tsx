@@ -39,7 +39,7 @@ const NewFoodForm = ({
         label="Taken At"
         rules={[{ required: true, message: "Date missing!" }]}
       >
-        <DatePicker showTime />
+        <DatePicker />
       </Form.Item>
 
       <Form.Item>

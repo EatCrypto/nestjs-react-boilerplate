@@ -1,3 +1,5 @@
+import { Food } from "./food";
+
 export type LoginPayload = {
   username: string;
   password: string;
@@ -11,9 +13,10 @@ export type User = {
   id: number;
   username: string;
   role: Role;
+  foods?: Food[];
 };
 
-export type Role = {
-  Admin: "admin";
-  User: "user";
-};
+export enum Role {
+  Admin = "admin",
+  User = "user",
+}

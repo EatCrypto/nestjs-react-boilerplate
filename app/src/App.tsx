@@ -1,11 +1,12 @@
 import "./App.css";
 
-import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
 import { useAuthContext } from "./contexts/AuthContext";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import { Role } from "./models/user";
 
 function App() {
   const { authUser, accessToken } = useAuthContext();
@@ -19,7 +20,15 @@ function App() {
         <Route
           path="/"
           element={
-            authUser && accessToken ? <Dashboard /> : <Navigate to="/login" />
+            authUser && accessToken ? (
+              authUser.role === Role.User ? (
+                <Dashboard />
+              ) : (
+                <AdminDashboard />
+              )
+            ) : (
+              <Navigate to="/login" />
+            )
           }
         />
       </Routes>

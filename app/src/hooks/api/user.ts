@@ -28,3 +28,9 @@ export const useUserInfo = (token: string) => {
     }
   );
 };
+
+export const useAllUsers = () => {
+  return useQuery("users", async () =>
+    axios.get<User[]>("/user").then((res) => res.data)
+  );
+};

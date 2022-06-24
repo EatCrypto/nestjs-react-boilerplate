@@ -18,7 +18,15 @@ axios.interceptors.response.use(
   }
 );
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnReconnect: false,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    },
+  },
+});
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
