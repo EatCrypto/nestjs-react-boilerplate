@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DateTime } from 'luxon';
-import { MONTHLY_COST_LIMIT } from 'src/constants';
+import { DAILY_CALORIE_THRESHOLD, MONTHLY_COST_LIMIT } from 'src/constants';
 import { User } from 'src/user/entities/user.entity';
 import { Role } from 'src/user/enum/role.enum';
 import { Between, Repository } from 'typeorm';
@@ -19,10 +19,21 @@ export class FoodService {
   ) {}
 
   async create(user: User, createFoodDto: CreateFoodDto) {
-    const sum = await this.getUserMonthlyCost(user.id);
+    const usedCost = await this.getUserMonthlyCost(user.id);
+    const usedCalories = await this.getDayThreshold(
+      user,
+      DateTime.fromISO(createFoodDto.takenAt),
+    );
+    if (usedCalories > DAILY_CALORIE_THRESHOLD) {
+      throw new Error(
+        `You already used ${usedCalories} calories for the selected date. Daily threshold limit is ${DAILY_CALORIE_THRESHOLD}!`,
+      );
+    }
 
-    if (sum > MONTHLY_COST_LIMIT) {
-      throw new Error('Reached monthly cost limit!');
+    if (usedCost > MONTHLY_COST_LIMIT) {
+      throw new Error(
+        `You spent ${usedCost} for the month. Monthly cost limit is ${MONTHLY_COST_LIMIT}!`,
+      );
     }
 
     return await this.foodsRepository.save({ ...createFoodDto, user });
@@ -43,8 +54,23 @@ export class FoodService {
 
   async findAll(user: User) {
     return await this.foodsRepository.find({
-      user: user.role === Role.Admin ? undefined : user,
+      where: {
+        user: user.role === Role.Admin ? undefined : user,
+      },
+      order: {
+        takenAt: 'DESC',
+      },
     });
+  }
+
+  async getDayThreshold(user: User, date: DateTime) {
+    const { sum } = await this.foodsRepository
+      .createQueryBuilder('food')
+      .select('SUM(food.calorie) as sum')
+      .where({ user, takenAt: Between(date.startOf('day'), date.endOf('day')) })
+      .getRawOne<{ sum: number }>();
+
+    return sum;
   }
 
   async getDailyThreshold(user: User) {
@@ -53,7 +79,7 @@ export class FoodService {
       .select(
         `
         SUM(food.calorie) as sum,
-        to_char(food.createdAt, 'YYYY-MM-DD') as date
+        to_char(food.takenAt, 'YYYY-MM-DD') as date
       `,
       )
       .where({ user })
@@ -82,7 +108,7 @@ export class FoodService {
       .createQueryBuilder('food')
       .select('SUM(food.price)', 'sum')
       .where({
-        createdAt: Between(monthStart, monthEnd),
+        takenAt: Between(monthStart, monthEnd),
         user: { id: userId },
       })
       .getRawOne<{ sum: number }>();

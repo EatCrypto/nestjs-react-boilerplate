@@ -1,7 +1,6 @@
 import { User } from 'src/user/entities/user.entity';
 import {
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -22,8 +21,8 @@ export class Food {
   @Column({ type: 'float' })
   price: number;
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  createdAt: Date;
+  @Column({ type: 'timestamptz' })
+  takenAt: Date;
 
   @ManyToOne(() => User, (user) => user.foods)
   @JoinColumn()

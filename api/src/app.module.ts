@@ -20,7 +20,7 @@ import configuration from './config/configuration';
         username: configService.get('database.user'),
         password: configService.get('database.password'),
         entities: [join(__dirname, '/**/*.entity{.ts,.js}')],
-        synchronize: true,
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),

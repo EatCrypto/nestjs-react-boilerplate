@@ -9,6 +9,15 @@ import { CookiesProvider } from "react-cookie";
 
 axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL;
 
+axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error.response.data);
+  }
+);
+
 const queryClient = new QueryClient();
 
 const root = ReactDOM.createRoot(

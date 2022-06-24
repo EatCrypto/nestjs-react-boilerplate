@@ -8,17 +8,19 @@ import Login from "./pages/Login";
 import { useAuthContext } from "./contexts/AuthContext";
 
 function App() {
-  const { authUser } = useAuthContext();
+  const { authUser, accessToken } = useAuthContext();
   return (
     <BrowserRouter>
       <Routes>
         <Route
           path="/login"
-          element={authUser ? <Navigate to="/" /> : <Login />}
+          element={authUser && accessToken ? <Navigate to="/" /> : <Login />}
         />
         <Route
           path="/"
-          element={authUser ? <Dashboard /> : <Navigate to="/login" />}
+          element={
+            authUser && accessToken ? <Dashboard /> : <Navigate to="/login" />
+          }
         />
       </Routes>
     </BrowserRouter>

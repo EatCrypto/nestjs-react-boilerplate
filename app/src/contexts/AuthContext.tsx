@@ -42,6 +42,8 @@ export const AuthContextProvider: FC<{ children: React.ReactNode }> = ({
     isError,
   } = useUserInfo(accessToken);
 
+  console.log(authUser);
+
   const onLogin = useCallback(
     (payload: LoginPayload) => {
       userLoginMutation.mutate(payload, {

@@ -15,9 +15,9 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli --config ./src/database/ormconfig.ts",
-    "migration:generate": "yarn typeorm -- migration:generate -n",
-    "migration:revert": "yarn typeorm -- migration:revert",
-    "migration:run": "yarn typeorm -- migration:run",
+    "migration:generate": "yarn typeorm migration:generate -n",
+    "migration:revert": "yarn typeorm migration:revert",
+    "migration:run": "yarn typeorm migration:run",
     "seed:config": "ts-node -r tsconfig-paths/register ./node_modules/typeorm-seeding/dist/cli.js config --configName ./src/database/ormconfig.ts",
     "seed:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm-seeding/dist/cli.js seed --configName ./src/database/ormconfig.ts"
   },

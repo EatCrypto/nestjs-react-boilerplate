@@ -1,13 +1,36 @@
-import { Button, Col, Layout, Row, Typography } from "antd";
+import { Button, Col, Layout, Modal, Row, Space, Typography } from "antd";
+import { useCallback } from "react";
+import FoodTable from "../components/FoodTable";
+import NewFoodForm from "../components/NewFoodForm";
 import { useAuthContext } from "../contexts/AuthContext";
-import { useUserFoods } from "../hooks/api/food";
+import { useAddNewFood, useUserFoods } from "../hooks/api/food";
+import { NewFoodEntry } from "../models/food";
 const { Header, Content } = Layout;
 
 const Dashboard = () => {
   const { authUser, onLogout } = useAuthContext();
   const { data } = useUserFoods();
+  const addNewFoodMutation = useAddNewFood();
 
-  console.log(data);
+  const onAddNewFood = useCallback(
+    (entry: NewFoodEntry) => {
+      addNewFoodMutation.mutate(
+        {
+          ...entry,
+          takenAt: entry.takenAt.toISOString(),
+        },
+        {
+          onError: (error) => {
+            Modal.error({
+              title: "Something went wrong!",
+              content: (error as Error).message,
+            });
+          },
+        }
+      );
+    },
+    [addNewFoodMutation]
+  );
 
   return (
     <Layout>
@@ -23,7 +46,13 @@ const Dashboard = () => {
           </Col>
         </Row>
       </Header>
-      <Content style={{ padding: "0 50px" }}></Content>
+      <Content style={{ padding: "50px" }}>
+        <Space direction="vertical">
+          <NewFoodForm onSubmit={onAddNewFood} />
+
+          <FoodTable foods={data || []} />
+        </Space>
+      </Content>
     </Layout>
   );
 };

@@ -13,4 +13,8 @@ export class CreateFoodDto {
   @IsNotEmpty()
   @Expose()
   price: number;
+
+  @IsNotEmpty()
+  @Expose()
+  takenAt: string;
 }
