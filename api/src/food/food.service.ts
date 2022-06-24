@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DateTime } from 'luxon';
 import { MONTHLY_COST_LIMIT } from 'src/constants';
 import { User } from 'src/user/entities/user.entity';
+import { Role } from 'src/user/enum/role.enum';
 import { Between, Repository } from 'typeorm';
 import { AdminCreateFoodDto } from './dto/admin-create-food.dto';
 import { CreateFoodDto } from './dto/create-food.dto';
@@ -41,7 +42,9 @@ export class FoodService {
   }
 
   async findAll(user: User) {
-    return await this.foodsRepository.find({ user });
+    return await this.foodsRepository.find({
+      user: user.role === Role.Admin ? undefined : user,
+    });
   }
 
   async getDailyThreshold(user: User) {

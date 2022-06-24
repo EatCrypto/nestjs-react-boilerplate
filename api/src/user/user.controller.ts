@@ -6,6 +6,7 @@ import { AuthResponseDto } from 'src/auth/dto/auth-response.dto';
 import { AuthApi } from 'src/auth/auth.decorator';
 import { Roles } from 'src/shared/role.decorator';
 import { Role } from './enum/role.enum';
+import { AuthUser } from 'src/shared/user.decorator';
 
 @Controller('user')
 export class UserController {
@@ -17,6 +18,12 @@ export class UserController {
   @Post('login')
   async login(@Body() input: LoginUserDto): Promise<AuthResponseDto> {
     return await this.authService.login(input.username, input.password);
+  }
+
+  @AuthApi()
+  @Get('me')
+  async me(@AuthUser() user) {
+    return user;
   }
 
   @AuthApi()
