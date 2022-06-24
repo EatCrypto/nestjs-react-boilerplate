@@ -3,13 +3,21 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "setup": "cd api && yarn",
+    "setup:api": "cd api && yarn",
+    "setup:app": "cd app && yarn",
+    "setup:env": "cp api/.env.sample api/.env && cp app/.env.local.sample app/.env.local",
+    "setup": "concurrently \"yarn setup:api\" \"yarn setup:app\"",
     "start:api": "cd api && yarn start:dev",
+    "start:app": "cd app && yarn start",
+    "start": "concurrently \"yarn start:api\" \"yarn start:app\"",
     "seed": "cd api && yarn seed:run",
     "migration:generate": "cd api && yarn migration:generate",
     "migration:run": "cd api && yarn migration:run"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^7.2.2"
+  }
 }
