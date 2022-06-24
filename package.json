@@ -6,7 +6,7 @@
     "setup:api": "cd api && yarn",
     "setup:app": "cd app && yarn",
     "setup:env": "cp api/.env.sample api/.env && cp app/.env.local.sample app/.env.local",
-    "setup": "concurrently \"yarn setup:api\" \"yarn setup:app\"",
+    "setup": "yarn setup:api && yarn setup:app && yarn setup:env",
     "start:api": "cd api && yarn start:dev",
     "start:app": "cd app && yarn start",
     "start": "concurrently \"yarn start:api\" \"yarn start:app\"",

@@ -24,6 +24,7 @@ docker-compose up -d
 Following command will run `yarn install` on both nestjs api and react client app and generate env files.
 
 ```console
+yarn install
 yarn setup
 ```
 
@@ -39,6 +40,22 @@ To generate two default users - admin and regular user.
 
 ```console
 yarn seed
+```
+
+## Start API and Client
+
+```console
+yarn start
+```
+
+`*** If you are using Linux/MacOS, update "npm start" script inside /app/package.json ***`
+
+```
+(From)
+"start": "set PORT=3001 && react-scripts start",
+
+(To)
+"start": "PORT=3001 react-scripts start",
 ```
 
 # That's it!!!
