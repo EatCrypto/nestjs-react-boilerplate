@@ -11,6 +11,6 @@ export class UserService {
   ) {}
 
   async findAll() {
-    return await this.usersRepository.find({ relations: ['foods'] });
+    return await this.usersRepository.find();
   }
 }

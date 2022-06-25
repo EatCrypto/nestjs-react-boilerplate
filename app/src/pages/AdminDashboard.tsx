@@ -1,77 +1,32 @@
 import { LeftOutlined } from "@ant-design/icons";
-import { Button, Col, Layout, Modal, Row, Space, Typography } from "antd";
-import { useCallback, useMemo, useState } from "react";
-import FoodTable from "../components/FoodTable";
-import NewFoodForm from "../components/NewFoodForm";
+import {
+  Button,
+  Col,
+  Descriptions,
+  Layout,
+  Row,
+  Space,
+  Typography,
+} from "antd";
+import { useState } from "react";
+import FoodSection from "../components/FoodSection";
 import UserSelection from "../components/UserSelection";
 import { useAuthContext } from "../contexts/AuthContext";
 import {
-  useAdminAddNewFood,
-  useDeleteFood,
-  useUpdateFood,
+  useAverageEntriesPerUserReport,
+  useEntriesPerWeekReport,
 } from "../hooks/api/food";
 import { useAllUsers } from "../hooks/api/user";
-import { Food, NewFoodEntry } from "../models/food";
 const { Header, Content } = Layout;
 
 const AdminDashboard = () => {
   const { authUser, onLogout } = useAuthContext();
-  const { data } = useAllUsers();
-  const adminAddNewFoodMutation = useAdminAddNewFood();
-  const updateFoodMutation = useUpdateFood();
-  const deleteFoodMutation = useDeleteFood();
+  const { data: users } = useAllUsers();
+  const { data: entriesPerWeekReport } = useEntriesPerWeekReport();
+  const { data: averageEntriesPerUserReport } =
+    useAverageEntriesPerUserReport();
+
   const [selectedUserId, setSelectedUserId] = useState<number>();
-
-  const onAddNewFood = useCallback(
-    (entry: NewFoodEntry) => {
-      if (selectedUserId) {
-        adminAddNewFoodMutation.mutate(
-          {
-            ...entry,
-            takenAt: entry.takenAt.toISOString(),
-            userId: selectedUserId,
-          },
-          {
-            onError: (error) => {
-              Modal.error({
-                title: "Something went wrong!",
-                content: (error as Error).message,
-              });
-            },
-          }
-        );
-      }
-    },
-    [adminAddNewFoodMutation, selectedUserId]
-  );
-
-  const onUpdateFood = useCallback(
-    (updatedFood: Food) => {
-      updateFoodMutation.mutate(updatedFood, {
-        onError: (error) => {
-          Modal.error({
-            title: "Something went wrong!",
-            content: (error as Error).message,
-          });
-        },
-      });
-    },
-    [updateFoodMutation]
-  );
-
-  const onDeleteFood = useCallback(
-    (id: number) => {
-      deleteFoodMutation.mutate(id);
-    },
-    [deleteFoodMutation]
-  );
-
-  const selectedUserFoods = useMemo(() => {
-    if (selectedUserId && data) {
-      return data.find((user) => user.id === selectedUserId)?.foods ?? [];
-    }
-    return [];
-  }, [data, selectedUserId]);
 
   return (
     <Layout>
@@ -101,17 +56,36 @@ const AdminDashboard = () => {
 
           {selectedUserId ? (
             <Space direction="vertical">
-              <NewFoodForm onSubmit={onAddNewFood} />
+              <Typography.Title level={4}>
+                Average calories:{" "}
+                {(
+                  (averageEntriesPerUserReport ?? {})[selectedUserId] ?? 0
+                ).toFixed(2)}
+              </Typography.Title>
 
-              <FoodTable
-                foods={selectedUserFoods}
-                editable
-                onUpdate={onUpdateFood}
-                onDelete={onDeleteFood}
-              />
+              <FoodSection userId={selectedUserId} editable />
             </Space>
           ) : (
-            <UserSelection users={data ?? []} onSelect={setSelectedUserId} />
+            <Space direction="vertical">
+              <Descriptions title="Entries Report">
+                <Descriptions.Item label="Entries in the last 7 days">
+                  <Typography.Title level={5}>
+                    {entriesPerWeekReport?.lastWeekEntries ?? 0}
+                  </Typography.Title>
+                </Descriptions.Item>
+                <Descriptions.Item label="Entries the week before last 7 days">
+                  <Typography.Title level={5}>
+                    {entriesPerWeekReport?.priorToLastWeekEntries ?? 0}
+                  </Typography.Title>
+                </Descriptions.Item>
+              </Descriptions>
+
+              <UserSelection
+                users={users ?? []}
+                onSelect={setSelectedUserId}
+                averageCaloriesPerUser={averageEntriesPerUserReport ?? {}}
+              />
+            </Space>
           )}
         </Space>
       </Content>

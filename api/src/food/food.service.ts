@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DateTime } from 'luxon';
 import { DAILY_CALORIE_THRESHOLD, MONTHLY_COST_LIMIT } from 'src/constants';
 import { User } from 'src/user/entities/user.entity';
-import { Role } from 'src/user/enum/role.enum';
 import { Between, Repository } from 'typeorm';
+import { AverageEntriesAddedPerUserDto } from './dto/average-entries-added-per-user.dto';
 import { CreateFoodDto } from './dto/create-food.dto';
+import { EntriesReportPerWeekDto } from './dto/entries-report-per-week.dto';
 import { GetDailyThresholdDto } from './dto/get-daily-threshold.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
 import { Food } from './entities/food.entity';
@@ -17,20 +18,31 @@ export class FoodService {
     private foodsRepository: Repository<Food>,
   ) {}
 
-  async create(userId: number, createFoodDto: CreateFoodDto) {
-    await this.validateUserLimit(userId, createFoodDto.takenAt);
+  async create(input: CreateFoodDto) {
+    const { userId, ...restInput } = input;
+    await this.validateUserLimit(
+      userId,
+      restInput.takenAt,
+      restInput.calorie,
+      restInput.price,
+    );
 
     return await this.foodsRepository.save({
-      ...createFoodDto,
+      ...restInput,
       user: { id: userId },
     });
   }
 
-  async validateUserLimit(userId: number, isoDate: string) {
+  async validateUserLimit(
+    userId: number,
+    isoDate: string,
+    calorie: number,
+    price: number,
+  ) {
     const dateTime = DateTime.fromISO(isoDate);
     const usedCost = await this.getUserMonthlyCost(userId, dateTime);
     const usedCalories = await this.getDayThreshold(userId, dateTime);
-    if (usedCalories > DAILY_CALORIE_THRESHOLD) {
+    if (usedCalories + calorie > DAILY_CALORIE_THRESHOLD) {
       throw new Error(
         `You already used ${usedCalories} calories for the selected date - ${dateTime.toFormat(
           'yyyy/MM/dd',
@@ -38,7 +50,7 @@ export class FoodService {
       );
     }
 
-    if (usedCost > MONTHLY_COST_LIMIT) {
+    if (usedCost + price > MONTHLY_COST_LIMIT) {
       throw new Error(
         `You spent ${usedCost} for the month - ${dateTime.toFormat(
           'yyyy/MM',
@@ -47,15 +59,34 @@ export class FoodService {
     }
   }
 
-  async findAll(user: User) {
-    return await this.foodsRepository.find({
-      where: {
-        user: user.role === Role.Admin ? undefined : user,
-      },
-      order: {
-        takenAt: 'DESC',
-      },
-    });
+  async list(userId: number) {
+    const result = await this.foodsRepository
+      .createQueryBuilder('food')
+      .select('food.name')
+      .where({ user: { id: userId } })
+      .distinctOn(['food.name'])
+      .orderBy('food.name', 'ASC')
+      .getMany();
+
+    return result.map((row) => row.name);
+  }
+
+  async findAll(userId: number, start: string, end: string) {
+    let query = this.foodsRepository
+      .createQueryBuilder('food')
+      .where({ user: { id: userId } });
+
+    if (start && end) {
+      query = query.andWhere({
+        takenAt: Between(
+          DateTime.fromISO(start).startOf('day'),
+          DateTime.fromISO(end).endOf('day'),
+        ),
+      });
+    }
+    query = query.orderBy('food.takenAt', 'DESC');
+
+    return await query.getMany();
   }
 
   async getDayThreshold(userId: number, date: DateTime) {
@@ -92,7 +123,12 @@ export class FoodService {
       relations: ['user'],
     });
 
-    await this.validateUserLimit(food.user.id, updateFoodDto.takenAt);
+    await this.validateUserLimit(
+      food.user.id,
+      updateFoodDto.takenAt,
+      updateFoodDto.calorie,
+      updateFoodDto.price,
+    );
     return await this.foodsRepository.save({
       id,
       ...updateFoodDto,
@@ -117,5 +153,47 @@ export class FoodService {
       .getRawOne<{ sum: number }>();
 
     return sum;
+  }
+
+  async entriesReportPerWeek(): Promise<EntriesReportPerWeekDto> {
+    const oneWeekAgoStart = DateTime.now().minus({ days: 7 }).startOf('day');
+
+    const lastWeekEntries = await this.foodsRepository.count({
+      where: {
+        takenAt: Between(oneWeekAgoStart, DateTime.now()),
+      },
+    });
+
+    const priorToLastWeekEntries = await this.foodsRepository.count({
+      where: {
+        takenAt: Between(
+          oneWeekAgoStart.minus({ days: 7 }),
+          oneWeekAgoStart.minus({ second: 1 }),
+        ),
+      },
+    });
+
+    return { lastWeekEntries, priorToLastWeekEntries };
+  }
+
+  async averageEntriesAddedPerUser(): Promise<AverageEntriesAddedPerUserDto> {
+    const result: { avg: number; userId: number }[] = await this.foodsRepository
+      .createQueryBuilder('food')
+      .select(
+        `
+        AVG(food.calorie) as avg,
+        food.userId
+      `,
+      )
+      .groupBy('food.userId')
+      .getRawMany();
+
+    const response: AverageEntriesAddedPerUserDto = {};
+
+    for (const record of result) {
+      response[record.userId] = record.avg;
+    }
+
+    return response;
   }
 }

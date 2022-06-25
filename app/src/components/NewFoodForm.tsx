@@ -1,12 +1,17 @@
-import { Button, DatePicker, Form, Input, InputNumber } from "antd";
+import { AutoComplete, Button, DatePicker, Form, InputNumber } from "antd";
+import { useMemo } from "react";
 import { NewFoodEntry } from "../models/food";
 
 const NewFoodForm = ({
   onSubmit,
+  list,
 }: {
+  list: string[];
   onSubmit: (newEntry: NewFoodEntry) => void;
 }) => {
   const [form] = Form.useForm();
+
+  const options = useMemo(() => list.map((value) => ({ value })), [list]);
 
   return (
     <Form layout="inline" form={form} onFinish={onSubmit}>
@@ -15,7 +20,7 @@ const NewFoodForm = ({
         label="Food Name"
         rules={[{ required: true, message: "Name missing!" }]}
       >
-        <Input />
+        <AutoComplete options={options} style={{ width: 150 }} />
       </Form.Item>
 
       <Form.Item

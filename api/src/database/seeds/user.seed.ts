@@ -10,8 +10,12 @@ export default class CreateUsers implements Seeder {
       .insert()
       .into(User)
       .values([
-        { username: 'thain', password: 'user', role: Role.User },
-        { username: 'admin', password: 'admin', role: Role.Admin },
+        { username: 'user1', password: 'password', role: Role.User },
+        { username: 'user2', password: 'password', role: Role.User },
+        { username: 'user3', password: 'password', role: Role.User },
+        { username: 'user4', password: 'password', role: Role.User },
+        { username: 'user5', password: 'password', role: Role.User },
+        { username: 'admin', password: 'password', role: Role.Admin },
       ])
       .execute();
   }

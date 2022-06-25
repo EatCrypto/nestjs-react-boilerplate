@@ -62,16 +62,18 @@ yarn start
 
 NestJS api is running at http://localhost:3000 and React client app is running at http://localhost:3001
 
-There are two test users.
+There are 6 test users. All users' password is `password`
 
 ```
 Admin User
 username: admin
-password: admin
 ```
 
 ```
 Regular User
-username: thain
-password: user
+username: user1
+username: user2
+username: user3
+username: user4
+username: user5
 ```

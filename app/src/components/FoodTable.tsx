@@ -66,7 +66,7 @@ const FoodTable = ({
           dataIndex: "takenAt",
           key: "takenAt",
           editable: true,
-          render: (takenAt: string) => new Date(takenAt).toLocaleString(),
+          render: (takenAt: string) => new Date(takenAt).toLocaleDateString(),
         },
       ],
       ...(editable

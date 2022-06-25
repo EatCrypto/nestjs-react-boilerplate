@@ -1,36 +1,54 @@
 import axios from "axios";
 import { useQuery, useQueryClient, useMutation } from "react-query";
-import { Food } from "../../models/food";
+import {
+  AverageEntriesAddedPerUser,
+  EntriesPerReport,
+  Food,
+} from "../../models/food";
 
-export const useUserFoods = () => {
-  return useQuery("foods", async () => {
-    return axios.get<Food[]>("/food").then((res) => res.data);
+export const useUserFoodNameList = (userId: number) => {
+  return useQuery(["food-list", userId], async () => {
+    return axios
+      .get<string[]>("/food/user/" + userId + "/list")
+      .then((res) => res.data);
   });
+};
+
+export const useUserFoods = (
+  userId: number,
+  range: [moment.Moment | null, moment.Moment | null]
+) => {
+  const startDate = range[0]?.toISOString() ?? "";
+  const endDate = range[1]?.toISOString() ?? "";
+
+  const urlSearchParams = new URLSearchParams();
+  if (startDate && endDate) {
+    urlSearchParams.set("start", startDate);
+    urlSearchParams.set("end", endDate);
+  }
+
+  return useQuery(
+    ["foods", userId, startDate, endDate],
+    async () => {
+      return axios
+        .get<Food[]>(`/food/user/${userId}?${urlSearchParams.toString()}`)
+        .then((res) => res.data);
+    },
+    {}
+  );
 };
 
 export const useAddNewFood = () => {
   const queryClient = useQueryClient();
   return useMutation(
-    (payload: Partial<Food>) => axios.post<Food>("/food", payload),
+    (payload: Partial<Food> & { userId: number }) =>
+      axios.post<Food>("/food", payload),
     {
       onSuccess: () => {
         queryClient.invalidateQueries("foods");
-      },
-    }
-  );
-};
-
-export const useAdminAddNewFood = () => {
-  const queryClient = useQueryClient();
-  return useMutation(
-    (
-      payload: Pick<Food, "name" | "calorie" | "price" | "takenAt"> & {
-        userId: number;
-      }
-    ) => axios.post<Food>("/food/admin", payload),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries("users");
+        queryClient.invalidateQueries("food-list");
+        queryClient.invalidateQueries("entries-per-week-report");
+        queryClient.invalidateQueries("average-entries-per-user-report");
       },
     }
   );
@@ -39,7 +57,12 @@ export const useAdminAddNewFood = () => {
 export const useDeleteFood = () => {
   const queryClient = useQueryClient();
   return useMutation((id: number) => axios.delete("/food/" + id), {
-    onSuccess: () => queryClient.invalidateQueries("users"),
+    onSuccess: () => {
+      queryClient.invalidateQueries("foods");
+      queryClient.invalidateQueries("food-list");
+      queryClient.invalidateQueries("entries-per-week-report");
+      queryClient.invalidateQueries("average-entries-per-user-report");
+    },
   });
 };
 
@@ -49,8 +72,29 @@ export const useUpdateFood = () => {
     (payload: Food) => axios.patch<Food>("/food/" + payload.id, payload),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries("users");
+        queryClient.invalidateQueries("foods");
+        queryClient.invalidateQueries("food-list");
+        queryClient.invalidateQueries("entries-per-week-report");
+        queryClient.invalidateQueries("average-entries-per-user-report");
       },
     }
+  );
+};
+
+export const useEntriesPerWeekReport = () => {
+  return useQuery("entries-per-week-report", async () =>
+    axios
+      .get<EntriesPerReport>("/food/report/entries-per-week")
+      .then((res) => res.data)
+  );
+};
+
+export const useAverageEntriesPerUserReport = () => {
+  return useQuery("average-entries-per-user-report", async () =>
+    axios
+      .get<AverageEntriesAddedPerUser>(
+        "/food/report/average-entries-added-per-user"
+      )
+      .then((res) => res.data)
   );
 };

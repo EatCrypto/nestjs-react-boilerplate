@@ -17,4 +17,8 @@ export class CreateFoodDto {
   @IsNotEmpty()
   @Expose()
   takenAt: string;
+
+  @IsNotEmpty()
+  @Expose()
+  userId: number;
 }

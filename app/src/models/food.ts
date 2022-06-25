@@ -14,3 +14,12 @@ export type NewFoodEntry = {
   price: number;
   takenAt: Moment;
 };
+
+export type EntriesPerReport = {
+  lastWeekEntries: number;
+  priorToLastWeekEntries: number;
+};
+
+export type AverageEntriesAddedPerUser = {
+  [userId: number]: number;
+};
