@@ -21,7 +21,7 @@ const Dashboard = () => {
         </Row>
       </Header>
       <Content style={{ padding: "50px" }}>
-        <FoodSection userId={authUser.id} />
+        <FoodSection user={authUser} />
       </Content>
     </Layout>
   ) : null;

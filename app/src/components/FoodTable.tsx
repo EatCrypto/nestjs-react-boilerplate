@@ -1,17 +1,20 @@
-import { Button, Form, Space, Table } from "antd";
+import { Button, Form, Space, Table, Typography } from "antd";
 import moment from "moment";
 import { useCallback, useMemo, useState } from "react";
 import { Food } from "../models/food";
+import { User } from "../models/user";
 import FoodTableEditableCell from "./FoodTableEditableCell";
 
 const FoodTable = ({
   foods,
   editable,
+  user,
   onUpdate,
   onDelete,
 }: {
   foods: Food[];
   editable?: boolean;
+  user: User;
   onDelete?: (id: number) => void;
   onUpdate?: (food: Food) => void;
 }) => {
@@ -60,13 +63,35 @@ const FoodTable = ({
           dataIndex: "price",
           key: "price",
           editable: true,
+          render: (price: number) => `$${price.toFixed(2)}`,
         },
         {
           title: "Food Taken",
           dataIndex: "takenAt",
           key: "takenAt",
           editable: true,
-          render: (takenAt: string) => new Date(takenAt).toLocaleDateString(),
+          render: (takenAt: string, food: Food) => (
+            <Space direction="vertical" size="small">
+              <Typography>{new Date(takenAt).toLocaleDateString()}</Typography>
+              <Typography
+                style={{
+                  color:
+                    food.threshold > user.dailyCalorieLimit ? "red" : undefined,
+                }}
+              >
+                (Total calorie used for the day {food.threshold} /{" "}
+                {user.dailyCalorieLimit})
+              </Typography>
+              <Typography
+                style={{
+                  color: food.cost > user.monthlyCostLimit ? "red" : undefined,
+                }}
+              >
+                (Total spent for the month ${food.cost.toFixed(2)} / $
+                {user.monthlyCostLimit.toFixed(2)})
+              </Typography>
+            </Space>
+          ),
         },
       ],
       ...(editable
@@ -104,7 +129,15 @@ const FoodTable = ({
           ]
         : []),
     ],
-    [editable, editableFood?.id, onDelete, onEdit, onSave]
+    [
+      editable,
+      editableFood?.id,
+      onDelete,
+      onEdit,
+      onSave,
+      user.dailyCalorieLimit,
+      user.monthlyCostLimit,
+    ]
   );
 
   const mergedColumns = useMemo(
@@ -144,7 +177,7 @@ const FoodTable = ({
         dataSource={foods}
         rowKey={(row) => row.id}
         pagination={false}
-        scroll={{ y: 560 }}
+        scroll={{ y: 800 }}
       />
     </Form>
   );

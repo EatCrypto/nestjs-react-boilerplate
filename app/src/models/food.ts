@@ -6,6 +6,8 @@ export type Food = {
   calorie: number;
   price: number;
   takenAt: string;
+  threshold: number;
+  cost: number;
 };
 
 export type NewFoodEntry = {

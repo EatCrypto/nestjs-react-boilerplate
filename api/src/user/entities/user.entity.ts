@@ -16,6 +16,12 @@ export class User {
   @Column({ type: 'enum', enum: Role })
   role: Role;
 
+  @Column({ type: 'float', default: 2100 })
+  dailyCalorieLimit: number;
+
+  @Column({ type: 'float', default: 1000 })
+  monthlyCostLimit: number;
+
   @OneToMany(() => Food, (food) => food.user)
   foods: Food[];
 }

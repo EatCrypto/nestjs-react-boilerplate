@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { keyBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { DAILY_CALORIE_THRESHOLD, MONTHLY_COST_LIMIT } from 'src/constants';
 import { User } from 'src/user/entities/user.entity';
+import { UserService } from 'src/user/user.service';
 import { Between, Repository } from 'typeorm';
 import { AverageEntriesAddedPerUserDto } from './dto/average-entries-added-per-user.dto';
 import { CreateFoodDto } from './dto/create-food.dto';
@@ -20,43 +21,29 @@ export class FoodService {
 
   async create(input: CreateFoodDto) {
     const { userId, ...restInput } = input;
-    await this.validateUserLimit(
+
+    const { usedCost, usedCalories } = await this.getUsedLimit(
       userId,
       restInput.takenAt,
-      restInput.calorie,
-      restInput.price,
     );
 
-    return await this.foodsRepository.save({
+    const food = await this.foodsRepository.save({
       ...restInput,
       user: { id: userId },
     });
+
+    return {
+      ...food,
+      threshold: usedCalories + food.calorie,
+      cost: usedCost + food.price,
+    };
   }
 
-  async validateUserLimit(
-    userId: number,
-    isoDate: string,
-    calorie: number,
-    price: number,
-  ) {
+  async getUsedLimit(userId: number, isoDate: string) {
     const dateTime = DateTime.fromISO(isoDate);
     const usedCost = await this.getUserMonthlyCost(userId, dateTime);
     const usedCalories = await this.getDayThreshold(userId, dateTime);
-    if (usedCalories + calorie > DAILY_CALORIE_THRESHOLD) {
-      throw new Error(
-        `You already used ${usedCalories} calories for the selected date - ${dateTime.toFormat(
-          'yyyy/MM/dd',
-        )}. Daily threshold limit is ${DAILY_CALORIE_THRESHOLD}!`,
-      );
-    }
-
-    if (usedCost + price > MONTHLY_COST_LIMIT) {
-      throw new Error(
-        `You spent ${usedCost} for the month - ${dateTime.toFormat(
-          'yyyy/MM',
-        )}. Monthly cost limit is ${MONTHLY_COST_LIMIT}!`,
-      );
-    }
+    return { usedCost, usedCalories };
   }
 
   async list(userId: number) {
@@ -86,7 +73,22 @@ export class FoodService {
     }
     query = query.orderBy('food.takenAt', 'DESC');
 
-    return await query.getMany();
+    const foods = await query.getMany();
+
+    const dailyThresholds = await this.getDailyThreshold(userId);
+    const monthlyCost = await this.getMonthlyCost(userId);
+
+    const result = foods.map((food) => ({
+      ...food,
+      threshold:
+        dailyThresholds[
+          DateTime.fromJSDate(food.takenAt).toFormat('yyyy-MM-dd')
+        ].sum,
+      cost: monthlyCost[DateTime.fromJSDate(food.takenAt).toFormat('yyyy-MM')]
+        .sum,
+    }));
+
+    return result;
   }
 
   async getDayThreshold(userId: number, date: DateTime) {
@@ -102,7 +104,7 @@ export class FoodService {
     return sum;
   }
 
-  async getDailyThreshold(user: User) {
+  async getDailyThreshold(userId: number) {
     const result = await this.foodsRepository
       .createQueryBuilder('food')
       .select(
@@ -111,11 +113,32 @@ export class FoodService {
         to_char(food.takenAt, 'YYYY-MM-DD') as date
       `,
       )
-      .where({ user })
+      .where({ user: { id: userId } })
       .groupBy('date')
       .getRawMany<GetDailyThresholdDto>();
 
-    return result;
+    return keyBy(result, (t) => t.date);
+  }
+
+  async getMonthlyCost(userId: number) {
+    const result = await this.foodsRepository
+      .createQueryBuilder('food')
+      .select(
+        `
+        SUM(food.price) as sum,
+        to_char(food.takenAt, 'YYYY-MM') as date
+      `,
+      )
+      .where({
+        user: { id: userId },
+      })
+      .groupBy('date')
+      .getRawMany<{
+        sum: number;
+        date: string;
+      }>();
+
+    return keyBy(result, (c) => c.date);
   }
 
   async update(id: number, updateFoodDto: UpdateFoodDto) {
@@ -123,16 +146,21 @@ export class FoodService {
       relations: ['user'],
     });
 
-    await this.validateUserLimit(
+    const { usedCost, usedCalories } = await this.getUsedLimit(
       food.user.id,
       updateFoodDto.takenAt,
-      updateFoodDto.calorie,
-      updateFoodDto.price,
     );
-    return await this.foodsRepository.save({
+
+    const updatedFood = await this.foodsRepository.save({
       id,
       ...updateFoodDto,
     });
+
+    return {
+      ...updatedFood,
+      threshold: usedCalories + updatedFood.calorie,
+      cost: usedCost + updatedFood.price,
+    };
   }
 
   async remove(id: number) {

@@ -21,9 +21,7 @@ axios.interceptors.response.use(
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnReconnect: false,
       refetchOnWindowFocus: false,
-      refetchOnMount: false,
     },
   },
 });

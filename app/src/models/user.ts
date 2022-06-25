@@ -11,6 +11,8 @@ export type User = {
   id: number;
   username: string;
   role: Role;
+  dailyCalorieLimit: number;
+  monthlyCostLimit: number;
 };
 
 export enum Role {

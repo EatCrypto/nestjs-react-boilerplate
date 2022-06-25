@@ -1,2 +1,0 @@
-export const DAILY_CALORIE_THRESHOLD = 2100;
-export const MONTHLY_COST_LIMIT = 1000;

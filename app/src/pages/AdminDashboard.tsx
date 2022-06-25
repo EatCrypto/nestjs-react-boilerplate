@@ -8,7 +8,7 @@ import {
   Space,
   Typography,
 } from "antd";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import FoodSection from "../components/FoodSection";
 import UserSelection from "../components/UserSelection";
 import { useAuthContext } from "../contexts/AuthContext";
@@ -27,6 +27,10 @@ const AdminDashboard = () => {
     useAverageEntriesPerUserReport();
 
   const [selectedUserId, setSelectedUserId] = useState<number>();
+  const selectedUser = useMemo(
+    () => users?.find((u) => u.id === selectedUserId),
+    [selectedUserId, users]
+  );
 
   return (
     <Layout>
@@ -54,16 +58,16 @@ const AdminDashboard = () => {
             </Button>
           )}
 
-          {selectedUserId ? (
+          {selectedUser ? (
             <Space direction="vertical">
               <Typography.Title level={4}>
                 Average calories:{" "}
                 {(
-                  (averageEntriesPerUserReport ?? {})[selectedUserId] ?? 0
+                  (averageEntriesPerUserReport ?? {})[selectedUser.id] ?? 0
                 ).toFixed(2)}
               </Typography.Title>
 
-              <FoodSection userId={selectedUserId} editable />
+              <FoodSection user={selectedUser} editable />
             </Space>
           ) : (
             <Space direction="vertical">

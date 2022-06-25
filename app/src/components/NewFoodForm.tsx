@@ -1,5 +1,5 @@
 import { AutoComplete, Button, DatePicker, Form, InputNumber } from "antd";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { NewFoodEntry } from "../models/food";
 
 const NewFoodForm = ({
@@ -13,8 +13,16 @@ const NewFoodForm = ({
 
   const options = useMemo(() => list.map((value) => ({ value })), [list]);
 
+  const onFinish = useCallback(
+    (entry: NewFoodEntry) => {
+      onSubmit(entry);
+      form.resetFields();
+    },
+    [form, onSubmit]
+  );
+
   return (
-    <Form layout="inline" form={form} onFinish={onSubmit}>
+    <Form layout="inline" form={form} onFinish={onFinish}>
       <Form.Item
         name="name"
         label="Food Name"

@@ -23,7 +23,7 @@ export class UserController {
   @AuthApi()
   @Get('me')
   async me(@AuthUser() user) {
-    return user;
+    return await this.userService.findOne(user.id);
   }
 
   @AuthApi()

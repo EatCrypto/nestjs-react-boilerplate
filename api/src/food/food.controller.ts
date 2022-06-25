@@ -54,12 +54,6 @@ export class FoodController {
   }
 
   @AuthApi()
-  @Get('daily-threshold')
-  async getDailyThreshold(@AuthUser() user: User) {
-    return await this.foodService.getDailyThreshold(user);
-  }
-
-  @AuthApi()
   @Roles(Role.Admin)
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateFoodDto: UpdateFoodDto) {
